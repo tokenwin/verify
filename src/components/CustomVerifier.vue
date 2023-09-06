@@ -36,7 +36,7 @@ const resultHash = computed(() =>
 
 <template>
   <div class="main">
-    <h1 class="text-center pb-5">{{ title + "11111" }}</h1>
+    <h1 class="text-center pb-5">{{ title }}</h1>
     <hr />
     <form class="py-5">
       <h2 class="text-center">Input</h2>
