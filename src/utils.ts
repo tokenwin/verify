@@ -44,7 +44,7 @@ export function encryptWithNonce(
   return result;
 }
 
-export function calculateGameResult(randomState: RandomState): number {
+export function calculateDiceResult(randomState: RandomState): number {
   const bytes = generateBytes(1, randomState);
   const outcome = bytesToGameEvents(bytes[0], 100 + (1 - 0.99));
   return new Decimal(outcome).toDecimalPlaces(2, Decimal.ROUND_DOWN).toNumber();
@@ -116,8 +116,8 @@ export function calculateMinesResult(
 
 export function calculateKenoResult(randomState: RandomState): number[] {
   const byteValues: number[][] = ([] as number[][])
-    .concat(generateBytes(6, randomState, 0))
-    .concat(generateBytes(4, randomState, 1));
+    .concat(generateBytes(8, randomState, 0))
+    .concat(generateBytes(2, randomState, 1));
 
   const outcomes = byteValues.map((bytes, index) =>
     bytesToGameEvents(bytes, 40 - index)
