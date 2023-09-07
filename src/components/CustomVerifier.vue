@@ -91,7 +91,17 @@ const resultHash = computed(() =>
         <h2 class="text-center pb-5">Results</h2>
         <h5>Final Result</h5>
         <h5>hmac_sha256(client_seed:nonce, server_seed)</h5>
-        <input class="form-control" readonly :value="generator(resultHash)" />
+        <input
+          class="form-control"
+          readonly
+          :value="
+            generator({
+              clientSeed: config.clientSeed,
+              serverSeed: config.serverSeed,
+              clientNonce: Number(config.nonce),
+            })
+          "
+        />
       </form>
     </template>
     <div v-else class="cell-field-wrapper">

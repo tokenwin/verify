@@ -1,4 +1,5 @@
 import CryptoJS from "crypto-js";
+import Decimal from "decimal.js";
 
 interface RandomState {
   clientSeed: string;
@@ -20,6 +21,17 @@ export function generateBust(seed: string, salt?: string): number {
   return Math.max(1, Math.floor(X) / 100);
 }
 
+export function calculateLimboResult(randomState: RandomState): number {
+  const bytes = generateBytes(1, randomState);
+  const outcome = bytesToGameEvents(bytes[0], 0xffffffff);
+
+  return new Decimal(0xffffffff)
+    .div(outcome)
+    .mul(0.99)
+    .toDecimalPlaces(2, Decimal.ROUND_DOWN)
+    .toNumber();
+}
+
 export function encryptWithNonce(
   serverSeed: string,
   clientSeed: string,
@@ -32,25 +44,10 @@ export function encryptWithNonce(
   return result;
 }
 
-export function diceBust(
-  serverSeed: string,
-  clientSeed: string,
-  nonce: number
-): number {
-  const hash = encryptWithNonce(serverSeed, clientSeed, nonce);
-  const hashBytes: number[] = [];
-
-  for (let i = 0; i < 4; i++) {
-    hashBytes.push(parseInt(hash.slice(i * 2, i * 2 + 2), 16));
-  }
-
-  const result =
-    hashBytes.reduce(
-      (acc, curValue, index) => (acc += curValue / Math.pow(256, index + 1)),
-      0
-    ) * 100.01;
-
-  return result;
+export function calculateGameResult(randomState: RandomState): number {
+  const bytes = generateBytes(1, randomState);
+  const outcome = bytesToGameEvents(bytes[0], 100 + (1 - 0.99));
+  return new Decimal(outcome).toDecimalPlaces(2, Decimal.ROUND_DOWN).toNumber();
 }
 
 export function generateBytes(
