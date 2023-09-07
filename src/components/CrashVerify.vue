@@ -1,44 +1,48 @@
 <script setup lang="ts">
-import CryptoJS from 'crypto-js'
-import { ref } from 'vue'
-import { generateBust } from '../utils'
-import { useRoute } from 'vue-router'
+import CryptoJS from "crypto-js";
+import { ref } from "vue";
+import { generateBust } from "../utils";
+import { useRoute } from "vue-router";
 
-const route = useRoute()
+const route = useRoute();
 
-let isVerifying = false
+let isVerifying = false;
 const config = ref({
   amount: 10,
-  hash: route.query.hash || ''
-})
+  hash: route.query.hash || "",
+  salt:
+    route.query.salt ||
+    "0000000000000000000301e2801a9a9598bfb114e574a91a887f2132f33047e6",
+});
 
-const tableRows = ref<{ hash: string; bust: number }[]>([])
+const tableRows = ref<{ hash: string; bust: number }[]>([]);
 
 const handleClick = () => {
-  if (isVerifying) return
-  tableRows.value = []
-  isVerifying = true
-  let prevHash = null
+  if (isVerifying) return;
+  tableRows.value = [];
+  isVerifying = true;
+  let prevHash = null;
   for (let i = 0; i < config.value.amount; i++) {
-    let hash: string = String(prevHash ? CryptoJS.SHA256(String(prevHash)) : config.value.hash)
-    let bust = generateBust(
-      hash,
-      '0000000000000000000301e2801a9a9598bfb114e574a91a887f2132f33047e6'
-    )
+    let hash: string = String(
+      prevHash ? CryptoJS.SHA256(String(prevHash)) : config.value.hash
+    );
+    let bust = generateBust(hash, config.value.salt as string);
     setTimeout(function () {
-      tableRows.value = [...tableRows.value, { hash, bust }]
-    }, i * 1)
-    prevHash = hash
+      tableRows.value = [...tableRows.value, { hash, bust }];
+    }, i * 1);
+    prevHash = hash;
   }
-  isVerifying = false
-}
+  isVerifying = false;
+};
 </script>
 
 <template>
   <section class="section">
     <div class="container">
       <h1 class="title">Crash - Game Verification Script</h1>
-      <h2 class="subtitle">Third party script used to verify games on crash game.</h2>
+      <h2 class="subtitle">
+        Third party script used to verify games on crash game.
+      </h2>
     </div>
     <hr />
     <div class="container">
@@ -51,6 +55,18 @@ const handleClick = () => {
             type="text"
             id="game_hash_input"
             placeholder="Game's hash (SHA256)"
+          />
+        </p>
+      </div>
+      <div class="field">
+        <label class="label">Salt</label>
+        <p class="control has-icons-left">
+          <input
+            class="input"
+            v-model="config.salt"
+            type="text"
+            id="game_salt_input"
+            placeholder="Salt"
           />
         </p>
       </div>
@@ -71,9 +87,15 @@ const handleClick = () => {
       </div>
       <div class="field is-grouped">
         <p class="control">
-          <a class="button is-primary" id="game_verify_submit" @click="handleClick">Verify</a>
+          <a
+            class="button is-primary"
+            id="game_verify_submit"
+            @click="handleClick"
+            >Verify</a
+          >
           <span v-if="config.amount >= 10000" class="amount-warning">
-            Verifying a huge amount of games may consume more ressources from your CPU
+            Verifying a huge amount of games may consume more ressources from
+            your CPU
           </span>
         </p>
       </div>
@@ -98,7 +120,13 @@ const handleClick = () => {
             :key="index"
           >
             <td>{{ tableRow.hash }}</td>
-            <td :style="tableRow.bust < 1.98 ? { color: '#BF4A67' } : { color: '#44B39D' }">
+            <td
+              :style="
+                tableRow.bust < 1.98
+                  ? { color: '#BF4A67' }
+                  : { color: '#44B39D' }
+              "
+            >
               {{ tableRow.bust }}
             </td>
           </tr>
@@ -159,7 +187,7 @@ hr {
 .input {
   -moz-appearance: none;
   -webkit-appearance: none;
-  appearance: 'none';
+  appearance: "none";
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
@@ -210,7 +238,7 @@ hr {
 .button {
   -moz-appearance: none;
   -webkit-appearance: none;
-  appearance: 'none';
+  appearance: "none";
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;

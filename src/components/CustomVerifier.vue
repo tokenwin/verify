@@ -42,13 +42,6 @@ const resultHash = computed(() =>
       <h2 class="text-center">Input</h2>
       <div class="form-group">
         <input
-          v-model="config.clientSeed"
-          class="form-control"
-          placeholder="Client Seed"
-        />
-      </div>
-      <div class="form-group">
-        <input
           v-model="config.serverSeed"
           class="form-control"
           placeholder="Server Seed"
@@ -56,6 +49,14 @@ const resultHash = computed(() =>
       </div>
       <div class="form-group">
         <input
+          v-model="config.clientSeed"
+          class="form-control"
+          placeholder="Client Seed"
+        />
+      </div>
+      <div class="form-group">
+        <input
+          type="number"
           v-model.number="config.nonce"
           class="form-control"
           placeholder="Nonce"
@@ -63,6 +64,7 @@ const resultHash = computed(() =>
       </div>
       <div v-if="cellsGame === 'mines'" class="form-group">
         <input
+          type="number"
           v-model.number="config.minesCount"
           class="form-control"
           placeholder="Mines Count"
