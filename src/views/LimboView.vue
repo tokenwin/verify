@@ -5,6 +5,12 @@ import { calculateLimboResult } from "@/utils";
 
 <template>
   <main>
-    <CustomVerifier title="Limbo verify" :generator="calculateLimboResult" />
+    <CustomVerifier
+      title="Limbo verify"
+      :generator="calculateLimboResult"
+      :bytes="[1]"
+      :maxResult="16777215"
+      withEdged
+    />
   </main>
 </template>

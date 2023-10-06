@@ -5,6 +5,11 @@ import { calculateDiceResult } from "@/utils";
 
 <template>
   <main>
-    <CustomVerifier title="Dice verify" :generator="calculateDiceResult" />
+    <CustomVerifier
+      title="Dice verify"
+      :generator="calculateDiceResult"
+      :bytes="[1]"
+      :maxResult="10000"
+    />
   </main>
 </template>

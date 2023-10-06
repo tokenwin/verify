@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { encryptWithNonce } from "@/utils";
-import CryptoJS from "crypto-js";
+import { generateBytes } from "@/utils";
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import CellsField from "./CellsField.vue";
+import HexTable from "./HexTable.vue";
+import BytesToNumber from "./BytesToNumber.vue";
+import ShuffleNumbers from "./ShuffleNumbers.vue";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     generator: (...args: any[]) => number | number[];
+    bytes: number[]; //quantity of bytes for each hash
+    maxResult?: number;
+    withEdged?: boolean;
     title?: string;
     cellsGame?: "mines" | "keno";
   }>(),
@@ -25,12 +30,32 @@ const config = ref({
   minesCount: Number(route.query.minesCount || 1),
 });
 
-const resultHash = computed(() =>
-  encryptWithNonce(
-    config.value.serverSeed,
-    config.value.clientSeed,
-    config.value.nonce
+const result = computed(() =>
+  props.generator(
+    {
+      clientSeed: config.value.clientSeed,
+      serverSeed: config.value.serverSeed,
+      clientNonce: Number(config.value.nonce),
+    },
+    24
   )
+);
+
+const decimalBytesResult = computed(() =>
+  props.bytes
+    .map(
+      (quantBytes, index) =>
+        generateBytes(
+          quantBytes,
+          {
+            clientNonce: Number(config.value.nonce),
+            clientSeed: config.value.clientSeed,
+            serverSeed: config.value.serverSeed,
+          },
+          props.bytes.length > 1 ? { cursor: index } : {}
+        ) as number[][]
+    )
+    .flat()
 );
 </script>
 
@@ -72,41 +97,8 @@ const resultHash = computed(() =>
       </div>
     </form>
     <hr />
-    <template v-if="!cellsGame">
-      <form class="py-5">
-        <h2 class="text-center pb-5">Output</h2>
-        <div class="form-group">
-          <label>sha256(server_seed)</label>
-          <input
-            class="form-control"
-            readonly
-            :value="CryptoJS.SHA256(String(config.serverSeed))"
-          />
-        </div>
-        <div class="form-group">
-          <label>hmac_sha256(client_seed:nonce, server_seed)</label>
-          <input class="form-control" readonly :value="resultHash" />
-        </div>
-      </form>
-      <hr />
-      <form class="py-5">
-        <h2 class="text-center pb-5">Results</h2>
-        <h5>Final Result</h5>
-        <h5>hmac_sha256(client_seed:nonce, server_seed)</h5>
-        <input
-          class="form-control"
-          readonly
-          :value="
-            generator({
-              clientSeed: config.clientSeed,
-              serverSeed: config.serverSeed,
-              clientNonce: Number(config.nonce),
-            })
-          "
-        />
-      </form>
-    </template>
-    <div v-else class="cell-field-wrapper">
+    <h2 class="text-center pb-5">Output</h2>
+    <div v-if="cellsGame" class="cell-field-wrapper">
       <CellsField
         :result="generator(
             {
@@ -120,6 +112,56 @@ const resultHash = computed(() =>
         :width="cellsGame === 'mines' ? 5 : 10"
         :height="cellsGame === 'mines' ? 5 : 4"
       />
+    </div>
+    <div>
+      <h5>Final Result</h5>
+      <div :style="{ marginBottom: '24px' }">
+        {{ result }}
+      </div>
+      <h5>Casino Seeds to Bytes</h5>
+      <HexTable
+        v-for="(quantBytes, index) in bytes"
+        :serverSeed="config.serverSeed"
+        :clientSeed="config.clientSeed"
+        :nonce="Number(config.nonce)"
+        :highlight="quantBytes * 4"
+        v-bind="bytes.length > 1 ? { cursor: index } : {}"
+      />
+      <h5>Bytes to Number</h5>
+      <div v-if="!withEdged">
+        <div class="overflow-wrapper">
+          <div class="bytes-to-number-wrapper">
+            <BytesToNumber
+              v-for="(decimalBytes, index) in decimalBytesResult"
+              :decimalBytesResult="decimalBytes"
+              :maxResult="
+                !cellsGame
+                  ? maxResult!
+                  : cellsGame === 'mines'
+                  ? 24 - index
+                  : 39 - index
+              "
+              :multiplier-result="cellsGame ? 1 : 100"
+              :floored="Boolean(cellsGame)"
+            />
+          </div>
+        </div>
+        <div v-if="cellsGame">
+          <h5>Numbers to Shuffle</h5>
+          <ShuffleNumbers
+            :width="cellsGame === 'mines' ? 25 : 40"
+            :result="(result as number[])"
+          />
+        </div>
+      </div>
+      <div v-else>
+        <BytesToNumber
+          :decimalBytesResult="decimalBytesResult.flat()"
+          :finalResult="(result as number)"
+          :maxResult="maxResult!"
+          :withEdged="withEdged"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -193,6 +235,14 @@ label {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.bytes-to-number-wrapper {
+  display: flex;
+  white-space: nowrap;
+}
+.overflow-wrapper {
+  overflow-x: auto;
+  margin-bottom: 24px;
 }
 @media (max-width: 800px) {
   .main {

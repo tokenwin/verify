@@ -9,6 +9,7 @@ import CustomVerifier from "../components/CustomVerifier.vue";
       title="Mines verify"
       :generator="calculateMinesResult"
       cellsGame="mines"
+      :bytes="[8, 8, 8]"
     />
   </main>
 </template>

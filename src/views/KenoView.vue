@@ -9,6 +9,7 @@ import CustomVerifier from "../components/CustomVerifier.vue";
       title="Keno verify"
       :generator="calculateKenoResult"
       cellsGame="keno"
+      :bytes="[8, 2]"
     />
   </main>
 </template>

@@ -22,11 +22,11 @@ export function generateBust(seed: string, salt?: string): number {
 }
 
 export function calculateLimboResult(randomState: RandomState): number {
-  const bytes = generateBytes(1, randomState);
-  const outcome = bytesToGameEvents(bytes[0], 0xffffffff);
+  const bytes = generateBytes(1, randomState) as number[][];
+  const outcome = bytesToGameEvents(bytes[0], 0xffffff + 1);
 
-  return new Decimal(0xffffffff)
-    .div(outcome)
+  return new Decimal(0xffffff + 1)
+    .div(outcome + 1)
     .mul(0.99)
     .toDecimalPlaces(2, Decimal.ROUND_DOWN)
     .toNumber();
@@ -45,7 +45,7 @@ export function encryptWithNonce(
 }
 
 export function calculateDiceResult(randomState: RandomState): number {
-  const bytes = generateBytes(1, randomState);
+  const bytes = generateBytes(1, randomState) as number[][];
   const outcome = bytesToGameEvents(bytes[0], 100 + (1 - 0.99));
   return new Decimal(outcome).toDecimalPlaces(2, Decimal.ROUND_DOWN).toNumber();
 }
@@ -53,8 +53,12 @@ export function calculateDiceResult(randomState: RandomState): number {
 export function generateBytes(
   count: number,
   randomState: RandomState,
-  cursor?: number
+  config?: {
+    cursor?: number;
+    withHex?: boolean;
+  }
 ) {
+  const { cursor, withHex } = config || {};
   const BYTES_PER_VALUE = 4;
 
   const hmac = CryptoJS.HmacSHA256(
@@ -78,7 +82,12 @@ export function generateBytes(
 
     valueBytes.push(bytes);
   }
-  return valueBytes.map((bytes) => bytes.map((byte) => parseInt(byte, 16)));
+  const result = valueBytes.map((bytes) =>
+    bytes.map((byte) => parseInt(byte, 16))
+  );
+  return !withHex
+    ? valueBytes.map((bytes) => bytes.map((byte) => parseInt(byte, 16)))
+    : [valueBytes, result];
 }
 
 export function bytesToGameEvents(bytes: Array<number>, outcomeCount: number) {
@@ -96,7 +105,9 @@ export function calculateMinesResult(
   const outcomes: number[] = [];
 
   for (let i = 0; i < Math.ceil(count / 8); i++) {
-    const byteValues = generateBytes(8, randomState, i);
+    const byteValues = generateBytes(8, randomState, {
+      cursor: i,
+    }) as number[][];
 
     outcomes.push(
       ...byteValues.map((bytes, index) =>
@@ -116,8 +127,8 @@ export function calculateMinesResult(
 
 export function calculateKenoResult(randomState: RandomState): number[] {
   const byteValues: number[][] = ([] as number[][])
-    .concat(generateBytes(8, randomState, 0))
-    .concat(generateBytes(2, randomState, 1));
+    .concat(generateBytes(8, randomState, { cursor: 0 }) as number[][])
+    .concat(generateBytes(2, randomState, { cursor: 1 }) as number[][]);
 
   const outcomes = byteValues.map((bytes, index) =>
     bytesToGameEvents(bytes, 40 - index)
