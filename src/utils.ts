@@ -7,7 +7,7 @@ interface RandomState {
   serverSeed: string;
 }
 
-export function generateBust(seed: string, salt?: string): number {
+export function generateBust(seed: string, salt?: string, rtp: string = 99): number {
   const nBits = 52;
 
   if (salt) {
@@ -17,7 +17,7 @@ export function generateBust(seed: string, salt?: string): number {
   const r = parseInt(seed.slice(0, nBits / 4), 16);
   let X = r / Math.pow(2, nBits);
   X = parseFloat(X.toPrecision(9));
-  X = 99 / (1 - X);
+  X = rtp / (1 - X);
   return Math.max(1, Math.floor(X) / 100);
 }
 
